@@ -62,24 +62,30 @@ After confirming the correct serial port, rerun the selected script without `--d
 
 ## Build from source
 
-Install PlatformIO Core and Python 3, then run this from the repository root:
+Install PlatformIO Core and Python 3. To reproduce the v0.1.1 firmware package, check out the release tag and run this from the repository root:
 
 ```sh
+git checkout v0.1.1
 python3 firmware/tools/package_s3_release.py --release-id v0.1.1
-pio run -d firmware -e waveshare-esp32s3-touch-lcd-4b-release
-make firmware_sim_native480 firmware_sim_native480_en
-./firmware_sim_native480 --demo
-./firmware_sim_native480_en --demo
 ```
 
-The command creates `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}` and records the app/assets hashes and source commit in each manifest. `.gitignore` excludes this generated directory; binary release assets are distributed separately from the source repository.
+This builds the zh/en release images under `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}` and records the app/assets hashes and source commit in each manifest. To build only the app images, run these from the repository root:
+
+```sh
+pio run -d firmware -e waveshare-esp32s3-touch-lcd-4b-release
+pio run -d firmware -e waveshare-esp32s3-touch-lcd-4b-en-release
+```
+
+`.gitignore` excludes `flash_images/`; binary release assets are distributed separately from the source repository.
 
 ## Simulator source
 
-The Git source tracks the simulator code, not compiled binaries. The v0.1.1 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) also offers an optional macOS arm64 simulator ZIP for macOS 26 or later. SDL2 is not bundled; install it locally with Homebrew using `brew install sdl2`. Building the simulator from source also requires the PlatformIO dependencies:
+The Git source tracks the simulator code, not compiled binaries. The v0.1.1 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) also offers an optional macOS arm64 simulator ZIP for macOS 26 or later. SDL2 is not bundled; install it locally with Homebrew using `brew install sdl2`. Building from source requires an Apple Silicon Mac, Homebrew SDL2, PlatformIO Core, and Python 3. After a fresh clone, install the PlatformIO package dependencies, then build each language:
 
 ```sh
-make firmware_sim_native480 firmware_sim_native480_en
+pio pkg install -d firmware -e waveshare-esp32s3-touch-lcd-4b
+make firmware_sim_native480
+make firmware_sim_native480_en
 ./run-zh.sh --demo
 ./run-en.sh --demo
 ```
