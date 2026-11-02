@@ -48,37 +48,97 @@ v0.1.1 提供繁體中文與英文介面、語音播報、本機設定與裝置�
 - 輸入家中 Wi-Fi 名稱與密碼、Gateway IP 與密碼，並選擇時區。時區預設 UTC+08:00，可選 UTC−12:00 至 UTC+14:00，每小時一格；設定會保存在 NVS。
 - 連線完成後，在設定（Settings）的資訊（Info）頁查看 Settings URL，並從同一個 Wi-Fi 網路開啟該網址重新設定。
 
-## 安裝 v0.1.1
+## v0.1.1 燒錄步驟
 
-Release bundle 有繁體中文 `zh/` 與英文 `en/` 兩套。解壓 release binary ZIP 到來源目錄後，確認雜湊並先執行 dry-run：
+### 1. 取得 main 腳本與 firmware ZIP
+
+完整燒錄腳本在 `main` 分支，請使用目前 main 原始碼。新 clone：
 
 ```sh
+git clone https://github.com/superdhuang/powerwall-dashboard-esp32.git
+cd powerwall-dashboard-esp32
+```
+
+已有 repo 則先更新：
+
+```sh
+git checkout main
+git pull origin main
+```
+
+從 [v0.1.1 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) 下載 `powerwall-dashboard-esp32-v0.1.1-firmware.zip`，解壓到 repo 根目錄：
+
+```sh
+curl -fL 'https://github.com/superdhuang/powerwall-dashboard-esp32/releases/download/v0.1.1/powerwall-dashboard-esp32-v0.1.1-firmware.zip' -o /tmp/powerwall-dashboard-esp32-v0.1.1-firmware.zip
+unzip -o /tmp/powerwall-dashboard-esp32-v0.1.1-firmware.zip -d .
+```
+
+預期會有 `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/zh/` 與 `en/`，各自包含 `manifest.json`、`app.bin`、`assets.bin` 等映像。若自行從原始碼建置 bundle，請依下方建置步驟切到 v0.1.1 tag；完成後切回 `main` 取得燒錄腳本。
+
+### 2. 檢查 manifest 與 SHA-256
+
+確認 zh/en manifest 都標示 v0.1.1、正確語言與 Waveshare S3 目標，再檢查 ZIP 內所有檔案雜湊：
+
+```sh
+python3 - <<'PY'
+import json
+from pathlib import Path
+root = Path('flash_images/esp32-s3-lcd-4b/releases/v0.1.1')
+for lang in ('zh', 'en'):
+    manifest = json.loads((root / lang / 'manifest.json').read_text())
+    assert manifest['release_id'] == 'v0.1.1'
+    assert manifest['language'] == lang
+    assert manifest['target'] == 'waveshare-esp32s3-touch-lcd-4b'
+    print(f'{lang}: manifest OK')
+PY
 (cd flash_images/esp32-s3-lcd-4b/releases/v0.1.1 && shasum -a 256 -c SHA256SUMS)
-./write-rel.sh --dry-run
-./write-rel-en.sh --dry-run
 ```
 
-確認使用正確序列埠後，移除 `--dry-run` 執行所需語言的腳本。兩支腳本只更新 app 與字型 assets，保留 NVS 設定與歷史資料；一般更新不會寫入清空歷史資料的 image。`write.sh` 和 `write-en.sh` 也指向本次 v0.1.1 release。
+### 3. 找出裝置序列埠
 
-### 完整燒錄（會清空整顆 Flash）
-
-只有在要完整初始化裝置時才使用 `write-full.sh` 或 `write-full-en.sh`。這兩支腳本位於 v0.1.1 tag 之後的 `main`，固定使用 v0.1.1 的 zh/en bundle。先用目前 `main` 原始碼；再從 [v0.1.1 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) 下載 firmware ZIP，解壓到 repo 根目錄；或依下方建置步驟從 `v0.1.1` tag 產生 bundle，之後切回 `main`。預期目錄為 `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}`。
-
-先做 dry-run；預設序列埠是 `/dev/cu.usbmodem3101`，可用 `--port` 指定：
+用 USB 連接並開啟開發板，在 macOS 執行 `pio device list`，選取該板的 `/dev/cu.*` 序列埠。若沒有 PlatformIO CLI，也可執行 `ls /dev/cu.*`，再辨認新出現的 USB 序列裝置。將下例替換成實際列出的 port：
 
 ```sh
-./write-full.sh --dry-run --port /dev/cu.usbmodem3101
-./write-full-en.sh --dry-run --port /dev/cu.usbmodem3101
+DEVICE_PORT="/dev/cu.usbmodemYOUR_DEVICE"
 ```
 
-實際完整燒錄會清除整顆 16 MB Flash，包括 Wi-Fi/Gateway 憑證、裝置設定、NVS 與所有歷史資料。未加確認參數時，腳本會要求輸入 `ERASE ALL FLASH`；也可明確加 `--confirm-erase`：
+### 4. 一般更新：只寫 app 與 assets
+
+選擇一種語言，先 dry-run。它會驗證 bundle 並列出寫入計畫，不會開啟序列埠：
 
 ```sh
-./write-full.sh --port /dev/cu.usbmodem3101
-./write-full-en.sh --port /dev/cu.usbmodem3101 --confirm-erase
+./write-rel.sh --dry-run --port "$DEVICE_PORT"      # 繁體中文
+./write-rel-en.sh --dry-run --port "$DEVICE_PORT"   # English
 ```
 
-每次執行都會寫入 `log/write-full*.log`。一般更新請使用上面的 `write-rel*.sh`，它們只更新 app/assets 並保留 NVS 與歷史資料。
+確認使用正確語言與 port 後，只執行其中一支並移除 `--dry-run`：
+
+```sh
+./write-rel.sh --port "$DEVICE_PORT"      # 繁體中文
+./write-rel-en.sh --port "$DEVICE_PORT"   # English
+```
+
+這是一般更新方式：只更新 app/assets，保留 Wi-Fi/Gateway 設定、NVS 與歷史資料。每次執行的 log 在 `log/write-rel*.log`。
+
+### 5. 完整燒錄：另行選擇，會清除所有資料
+
+**只有在要完整初始化裝置時才使用。FULL 會清除整顆 16 MB Flash，包含 Wi-Fi/Gateway 憑證、裝置設定、NVS 與所有歷史資料。** 一般更新請回到上一步使用 `write-rel*.sh`。
+
+先 dry-run；它不開序列埠，也不需要確認短語：
+
+```sh
+./write-full.sh --dry-run --port "$DEVICE_PORT"      # 繁體中文
+./write-full-en.sh --dry-run --port "$DEVICE_PORT"   # English
+```
+
+確認後選擇一個語言執行。互動式執行時，依提示輸入 `ERASE ALL FLASH`；非互動執行可明確加 `--confirm-erase`：
+
+```sh
+./write-full.sh --port "$DEVICE_PORT"                         # 互動確認
+./write-full-en.sh --port "$DEVICE_PORT" --confirm-erase     # 明確確認
+```
+
+Full-flash log 在 `log/write-full*.log`。清除後首次開機會重新進入 `powerwall-dashboard` 設定 AP；請依上方「按鍵與首次設定」重新設定 Wi-Fi、Gateway 與時區。
 
 ## 從原始碼建置
 

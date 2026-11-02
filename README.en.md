@@ -48,37 +48,97 @@ These pages were rendered by this project's simulator with synthetic demo data. 
 - Enter your Wi-Fi name and password, the Gateway IP and password, and your time zone. The default is UTC+08:00; whole-hour offsets from UTC−12:00 through UTC+14:00 are supported and stored in NVS.
 - After the device joins Wi-Fi, open Settings → Info and read **Settings URL**. From a phone or computer on the same Wi-Fi, open that address to revisit the settings page.
 
-## Install v0.1.1
+## v0.1.1 flashing steps
 
-The release binary ZIP contains Traditional Chinese (`zh/`) and English (`en/`) bundles. Extract it into the source directory, verify the hashes, and run a dry check first:
+### 1. Get the `main` scripts and firmware ZIP
+
+The full-flash scripts are on the current `main` branch. For a new clone:
 
 ```sh
+git clone https://github.com/superdhuang/powerwall-dashboard-esp32.git
+cd powerwall-dashboard-esp32
+```
+
+For an existing clone, update it first:
+
+```sh
+git checkout main
+git pull origin main
+```
+
+Download `powerwall-dashboard-esp32-v0.1.1-firmware.zip` from the [v0.1.1 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) and extract it into the repository root:
+
+```sh
+curl -fL 'https://github.com/superdhuang/powerwall-dashboard-esp32/releases/download/v0.1.1/powerwall-dashboard-esp32-v0.1.1-firmware.zip' -o /tmp/powerwall-dashboard-esp32-v0.1.1-firmware.zip
+unzip -o /tmp/powerwall-dashboard-esp32-v0.1.1-firmware.zip -d .
+```
+
+The expected directories are `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/zh/` and `en/`. Each contains a `manifest.json`, `app.bin`, `assets.bin`, and the other images. To build the bundle yourself, follow the build instructions below from the `v0.1.1` tag, then switch back to `main` for the flash scripts.
+
+### 2. Check the manifests and SHA-256
+
+Confirm that both manifests identify release v0.1.1, the matching language, and the Waveshare S3 target; then verify every file checksum from the ZIP:
+
+```sh
+python3 - <<'PY'
+import json
+from pathlib import Path
+root = Path('flash_images/esp32-s3-lcd-4b/releases/v0.1.1')
+for lang in ('zh', 'en'):
+    manifest = json.loads((root / lang / 'manifest.json').read_text())
+    assert manifest['release_id'] == 'v0.1.1'
+    assert manifest['language'] == lang
+    assert manifest['target'] == 'waveshare-esp32s3-touch-lcd-4b'
+    print(f'{lang}: manifest OK')
+PY
 (cd flash_images/esp32-s3-lcd-4b/releases/v0.1.1 && shasum -a 256 -c SHA256SUMS)
-./write-rel.sh --dry-run
-./write-rel-en.sh --dry-run
 ```
 
-After confirming the correct serial port, rerun the selected script without `--dry-run`. Both scripts update only the app and font assets, preserving NVS settings and recorded history. They do not write the image that clears history. The root `write.sh` and `write-en.sh` scripts also point to this v0.1.1 release.
+### 3. Find the device serial port
 
-### Full flash (erases all flash)
-
-Use `write-full.sh` or `write-full-en.sh` only when intentionally initializing the device. These wrappers were added to `main` after the v0.1.1 tag and are pinned to its zh/en bundles. Start from the current `main` source, then download the firmware ZIP from the [v0.1.1 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) and extract it at the repository root; alternatively, build the bundle from the `v0.1.1` tag using the instructions below and switch back to `main`. The expected directories are `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}`.
-
-Run a dry check first. The default serial port is `/dev/cu.usbmodem3101`; override it with `--port`:
+Connect the board over USB, then run `pio device list` on macOS and choose the port listed for the board under `/dev/cu.*`. If PlatformIO CLI is unavailable, run `ls /dev/cu.*` and identify the newly connected USB serial device. Replace the example below with the port shown on your Mac:
 
 ```sh
-./write-full.sh --dry-run --port /dev/cu.usbmodem3101
-./write-full-en.sh --dry-run --port /dev/cu.usbmodem3101
+DEVICE_PORT="/dev/cu.usbmodemYOUR_DEVICE"
 ```
 
-A real full flash erases the entire 16 MB flash, including Wi-Fi/Gateway credentials, device settings, NVS, and all recorded history. Without a confirmation option, the script asks you to type `ERASE ALL FLASH`; you can also pass `--confirm-erase` explicitly:
+### 4. Normal update: write app and assets only
+
+Choose one language and run its dry-run first. It validates the bundle and prints the write plan without opening the serial port:
 
 ```sh
-./write-full.sh --port /dev/cu.usbmodem3101
-./write-full-en.sh --port /dev/cu.usbmodem3101 --confirm-erase
+./write-rel.sh --dry-run --port "$DEVICE_PORT"      # Traditional Chinese
+./write-rel-en.sh --dry-run --port "$DEVICE_PORT"   # English
 ```
 
-Each run writes a log under `log/write-full*.log`. For normal updates, use `write-rel*.sh` above; those scripts update only app/assets and preserve NVS and history.
+After confirming the language and port, run only the selected script without `--dry-run`:
+
+```sh
+./write-rel.sh --port "$DEVICE_PORT"      # Traditional Chinese
+./write-rel-en.sh --port "$DEVICE_PORT"   # English
+```
+
+This is the normal update path: it writes only app/assets and preserves Wi-Fi/Gateway settings, NVS, and recorded history. Logs are saved under `log/write-rel*.log`.
+
+### 5. Full flash: separate option that erases all data
+
+**Use this only when intentionally initializing the device. FULL erases the entire 16 MB flash, including Wi-Fi/Gateway credentials, device settings, NVS, and all recorded history.** For normal updates, use `write-rel*.sh` in the previous step.
+
+Run a dry-run first. It does not open the serial port and requires no confirmation phrase:
+
+```sh
+./write-full.sh --dry-run --port "$DEVICE_PORT"      # Traditional Chinese
+./write-full-en.sh --dry-run --port "$DEVICE_PORT"   # English
+```
+
+After checking the plan, choose one language. Interactive runs prompt you to type `ERASE ALL FLASH`; for a non-interactive run, explicitly pass `--confirm-erase`:
+
+```sh
+./write-full.sh --port "$DEVICE_PORT"                         # interactive confirmation
+./write-full-en.sh --port "$DEVICE_PORT" --confirm-erase     # explicit confirmation
+```
+
+Full-flash logs are saved under `log/write-full*.log`. After the erase, the device starts its `powerwall-dashboard` setup AP again; repeat the Wi-Fi, Gateway, and time-zone setup steps above.
 
 ## Build from source
 
