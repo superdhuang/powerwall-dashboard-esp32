@@ -60,6 +60,26 @@ The release binary ZIP contains Traditional Chinese (`zh/`) and English (`en/`) 
 
 After confirming the correct serial port, rerun the selected script without `--dry-run`. Both scripts update only the app and font assets, preserving NVS settings and recorded history. They do not write the image that clears history. The root `write.sh` and `write-en.sh` scripts also point to this v0.1.1 release.
 
+### Full flash (erases all flash)
+
+Use `write-full.sh` or `write-full-en.sh` only when intentionally initializing the device. These wrappers were added to `main` after the v0.1.1 tag and are pinned to its zh/en bundles. Start from the current `main` source, then download the firmware ZIP from the [v0.1.1 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) and extract it at the repository root; alternatively, build the bundle from the `v0.1.1` tag using the instructions below and switch back to `main`. The expected directories are `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}`.
+
+Run a dry check first. The default serial port is `/dev/cu.usbmodem3101`; override it with `--port`:
+
+```sh
+./write-full.sh --dry-run --port /dev/cu.usbmodem3101
+./write-full-en.sh --dry-run --port /dev/cu.usbmodem3101
+```
+
+A real full flash erases the entire 16 MB flash, including Wi-Fi/Gateway credentials, device settings, NVS, and all recorded history. Without a confirmation option, the script asks you to type `ERASE ALL FLASH`; you can also pass `--confirm-erase` explicitly:
+
+```sh
+./write-full.sh --port /dev/cu.usbmodem3101
+./write-full-en.sh --port /dev/cu.usbmodem3101 --confirm-erase
+```
+
+Each run writes a log under `log/write-full*.log`. For normal updates, use `write-rel*.sh` above; those scripts update only app/assets and preserve NVS and history.
+
 ## Build from source
 
 Install PlatformIO Core and Python 3. To reproduce the v0.1.1 firmware package, check out the release tag and run this from the repository root:

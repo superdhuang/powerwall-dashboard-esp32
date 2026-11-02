@@ -60,6 +60,26 @@ Release bundle 有繁體中文 `zh/` 與英文 `en/` 兩套。解壓 release bin
 
 確認使用正確序列埠後，移除 `--dry-run` 執行所需語言的腳本。兩支腳本只更新 app 與字型 assets，保留 NVS 設定與歷史資料；一般更新不會寫入清空歷史資料的 image。`write.sh` 和 `write-en.sh` 也指向本次 v0.1.1 release。
 
+### 完整燒錄（會清空整顆 Flash）
+
+只有在要完整初始化裝置時才使用 `write-full.sh` 或 `write-full-en.sh`。這兩支腳本位於 v0.1.1 tag 之後的 `main`，固定使用 v0.1.1 的 zh/en bundle。先用目前 `main` 原始碼；再從 [v0.1.1 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) 下載 firmware ZIP，解壓到 repo 根目錄；或依下方建置步驟從 `v0.1.1` tag 產生 bundle，之後切回 `main`。預期目錄為 `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}`。
+
+先做 dry-run；預設序列埠是 `/dev/cu.usbmodem3101`，可用 `--port` 指定：
+
+```sh
+./write-full.sh --dry-run --port /dev/cu.usbmodem3101
+./write-full-en.sh --dry-run --port /dev/cu.usbmodem3101
+```
+
+實際完整燒錄會清除整顆 16 MB Flash，包括 Wi-Fi/Gateway 憑證、裝置設定、NVS 與所有歷史資料。未加確認參數時，腳本會要求輸入 `ERASE ALL FLASH`；也可明確加 `--confirm-erase`：
+
+```sh
+./write-full.sh --port /dev/cu.usbmodem3101
+./write-full-en.sh --port /dev/cu.usbmodem3101 --confirm-erase
+```
+
+每次執行都會寫入 `log/write-full*.log`。一般更新請使用上面的 `write-rel*.sh`，它們只更新 app/assets 並保留 NVS 與歷史資料。
+
 ## 從原始碼建置
 
 需要 PlatformIO Core 與 Python 3。要重現 v0.1.1 韌體套件，先切到 release tag，再從 repo 根目錄執行：
