@@ -76,7 +76,7 @@ make firmware_sim_native480 firmware_sim_native480_en
 
 ## Simulator（原始碼）
 
-Repo 提供 simulator 原始碼，不提供編譯好的 simulator 執行檔。自行建置需要 SDL2（macOS 可用 `brew install sdl2`）及 PlatformIO 套件：
+Git 原始碼只追蹤 simulator 原始碼，不包含編譯後的執行檔。v0.1.1 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) 另提供可選的 macOS arm64 simulator ZIP；適用 macOS 26 以上，ZIP 不含 SDL2，請先用 Homebrew 安裝 `brew install sdl2`。自行由原始碼建置也需要 PlatformIO 套件：
 
 ```sh
 make firmware_sim_native480 firmware_sim_native480_en

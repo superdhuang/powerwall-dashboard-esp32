@@ -76,7 +76,7 @@ The command creates `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}` and r
 
 ## Simulator source
 
-This repository includes simulator source code, but no compiled simulator binaries. Building it requires SDL2 (on macOS, install it with `brew install sdl2`) and the PlatformIO dependencies:
+The Git source tracks the simulator code, not compiled binaries. The v0.1.1 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) also offers an optional macOS arm64 simulator ZIP for macOS 26 or later. SDL2 is not bundled; install it locally with Homebrew using `brew install sdl2`. Building the simulator from source also requires the PlatformIO dependencies:
 
 ```sh
 make firmware_sim_native480 firmware_sim_native480_en
