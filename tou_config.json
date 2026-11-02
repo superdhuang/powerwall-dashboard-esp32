@@ -1,0 +1,109 @@
+{
+  "site_title": "我的家",
+  "gateway_ip": "",
+  "currency": "NT$",
+  "seasons": {
+    "season1": {
+      "id": "season1",
+      "name": "季節 1",
+      "months_label": "十月 - 五月",
+      "months": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "rates": {
+        "off_peak": 1.99,
+        "peak": 4.93,
+        "sell_off_peak": 0.0,
+        "sell_peak": 0.0
+      },
+      "weekday_periods": [
+        {
+          "type": "off_peak",
+          "label": "離峰",
+          "start": 0,
+          "end": 6,
+          "display_time": "凌晨 12:00 - 早上 6:00"
+        },
+        {
+          "type": "peak",
+          "label": "高峰",
+          "start": 6,
+          "end": 11,
+          "display_time": "早上 6:00 - 上午 11:00"
+        },
+        {
+          "type": "off_peak",
+          "label": "離峰",
+          "start": 11,
+          "end": 14,
+          "display_time": "上午 11:00 - 下午 2:00"
+        },
+        {
+          "type": "peak",
+          "label": "高峰",
+          "start": 14,
+          "end": 24,
+          "display_time": "下午 2:00 - 凌晨 12:00"
+        }
+      ],
+      "weekend_periods": [
+        {
+          "type": "off_peak",
+          "label": "離峰",
+          "start": 0,
+          "end": 24,
+          "display_time": "凌晨 12:00 - 凌晨 12:00"
+        }
+      ]
+    },
+    "season2": {
+      "id": "season2",
+      "name": "季節 2",
+      "months_label": "六月 - 九月",
+      "months": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "rates": {
+        "off_peak": 2.06,
+        "peak": 5.16,
+        "sell_off_peak": 0.0,
+        "sell_peak": 0.0
+      },
+      "weekday_periods": [
+        {
+          "type": "off_peak",
+          "label": "離峰",
+          "start": 0,
+          "end": 9,
+          "display_time": "凌晨 12:00 - 上午 9:00"
+        },
+        {
+          "type": "peak",
+          "label": "高峰",
+          "start": 9,
+          "end": 24,
+          "display_time": "上午 9:00 - 凌晨 12:00"
+        }
+      ],
+      "weekend_periods": [
+        {
+          "type": "off_peak",
+          "label": "離峰",
+          "start": 0,
+          "end": 24,
+          "display_time": "凌晨 12:00 - 凌晨 12:00"
+        }
+      ]
+    }
+  }
+}

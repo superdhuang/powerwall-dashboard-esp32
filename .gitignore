@@ -1,0 +1,32 @@
+# Local seven-day simulator telemetry
+history_week.json
+history_week.json.*.tmp
+history_today.json
+daily_trend_today.json
+device_settings.json
+firmware/src/local_debug_wifi.hpp
+nvs_config.json
+
+# Local simulator/build output
+/build/
+/firmware_sim*
+/lvgl_sim*
+/concept_sim
+/captures/
+*.log
+*.ppm
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Local flash images, including the original device backup
+/flash_images/
+/log/write*.log
+/firmware/.pio/
+
+# pioarduino hybrid SDK build outputs for the Waveshare S3 4B target
+/firmware/.dummy/
+/firmware/managed_components/
+/firmware/CMakeLists.txt
+/firmware/dependencies.lock
+/firmware/sdkconfig.*
