@@ -6,20 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "font_asset_format.hpp"
-#if defined(POWERWALL_NATIVE480)
 #include "native480_font_names.hpp"
-#else
-#include "font_asset_names.hpp"
-#endif
-#if defined(POWERWALL_NATIVE480)
 inline constexpr const char* const* powerwallFontNames = kNative480FontNames;
 inline constexpr uint32_t powerwallFontNameCount = sizeof(kNative480FontNames) / sizeof(kNative480FontNames[0]);
-#else
-#define PW_FONT_NAME(i,n) #n,
-inline const char* const powerwallFontNames[]={POWERWALL_FONT_LIST(PW_FONT_NAME)};
-#undef PW_FONT_NAME
-inline constexpr uint32_t powerwallFontNameCount = sizeof(powerwallFontNames) / sizeof(powerwallFontNames[0]);
-#endif
 #if defined(ESP32)
 #include <SPIFFS.h>
 #include <esp_heap_caps.h>
@@ -65,20 +54,13 @@ inline bool load(){
  data=static_cast<uint8_t*>(heap_caps_malloc(bytes,MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT));if(!data)return false;size_t got=f.read(data,bytes);f.close();if(got!=bytes){free(data);data=nullptr;return false;}
 #else
  const char* path=getenv("POWERWALL_FONT_ASSETS");
- if(!path){
-#if defined(POWERWALL_NATIVE480)
-  path="firmware/assets/native480/fonts.pwf";
-#else
-  path="firmware/assets/fonts.pwf";
-#endif
- }
+ if(!path)path="firmware/assets/native480/fonts.pwf";
  std::ifstream f(path,std::ios::binary|std::ios::ate);if(!f)return false;bytes=static_cast<size_t>(f.tellg());if(bytes>4*1024*1024||bytes<sizeof(FontAssetHeader))return false;f.seekg(0);data=static_cast<uint8_t*>(malloc(bytes));if(!data||!f.read(reinterpret_cast<char*>(data),bytes)){free(data);data=nullptr;return false;}
 #endif
  if(!validate()){free(data);data=nullptr;records=nullptr;bytes=0;printf("[Fonts] invalid asset pack; UI creation refused\n");return false;}
  printf("[Fonts] loaded %u fonts, %u bytes into runtime memory\n",unsigned(count),unsigned(bytes));return true;
 }
 }
-inline const lv_font_t* powerwallFont(unsigned index){return index<powerwall_fonts::count?powerwall_fonts::fonts+index:nullptr;}
 inline const lv_font_t* powerwallFontByName(const char* name){
  if(!name)return nullptr;
  for(uint32_t i=0;i<powerwall_fonts::count;++i)if(strcmp(powerwall_fonts::records[i].name,name)==0)return powerwall_fonts::fonts+i;

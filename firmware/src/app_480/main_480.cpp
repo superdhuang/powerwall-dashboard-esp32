@@ -715,14 +715,7 @@ void setup() {
   }
   // 1. Initialize LVGL core, PSRAM draw buffer, display flush & touch driver before building widgets
   POWERWALL_BOOT_STAGE("Initializing display and touch");
-#if defined(POWERWALL_EMULATOR_HEADLESS)
-  Serial.println("[display] Emulator headless: LVGL active; LCD/touch hardware disabled");
-  displayReady = displayDriver.begin(
-    [](const lv_area_t*, lv_color_t*) {},
-    [](int16_t*, int16_t*) -> bool { return false; });
-#else
   displayReady = displayDriver.begin();
-#endif
   if (!displayReady) {
     Serial.printf("[%s 480x480] ERROR: Display driver initialization failed; skipping UI creation.\n", kBoardName);
   } else {
@@ -745,15 +738,6 @@ void setup() {
   // 2. Start tzapu/WiFiManager:
   //    - First boot (unconfigured Wi-Fi): opens SoftAP "powerwall-dashboard" (192.168.4.1) & pops up Captive Portal
   //    - Subsequent boots: auto-connects to saved Wi-Fi and keeps non-blocking web portal active for changing Powerwall IP/Password
-#if defined(POWERWALL_EMULATOR_HEADLESS)
-  // These are the emulator's virtual AP credentials, never the physical LAN's.
-  // Connect STA directly: switching the Hosted bridge through a provisioning
-  // SoftAP is unnecessary for a headless emulator and can drop its RPC events.
-  Serial.println("[Wi-Fi] Connecting to esp-emu virtual AP myssid...");
-  WiFi.begin("myssid", "mypassword");
-  const unsigned long wifiStart = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < 20000UL) delay(50);
-#endif
   POWERWALL_BOOT_STAGE("Connecting with saved Wi-Fi settings; portal opens if unavailable");
   if (displayReady) display480.setWifiStartupCardMode(0, nullptr);
   // Load and apply the persisted offset on this task before the WiFiManager task starts.

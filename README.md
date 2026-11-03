@@ -142,7 +142,7 @@ Full-flash log 在 `log/write-full*.log`。清除後首次開機會重新進入 
 
 ## 從原始碼建置
 
-需要 PlatformIO Core 與 Python 3。要重現 v0.1.1 韌體套件，先切到 release tag，再從 repo 根目錄執行：
+需要 PlatformIO Core 與 Python 3。若要從原始碼建立 v0.1.1 套件，先切到當時的 release tag，再從 repo 根目錄執行：
 
 ```sh
 git checkout v0.1.1
@@ -158,6 +158,8 @@ pio run -d firmware -e waveshare-esp32s3-touch-lcd-4b-en-release
 
 `flash_images/` 由 `.gitignore` 排除；binary release ZIP 與 source repo 分開保存。
 
+GitHub 上已發布的 v0.1.1 ZIP 與其中的 `SHA256SUMS` 是該版本映像的校驗依據。重新建置不保證與既有 binary 逐位元相同，因 PlatformIO 使用上游 `stable` platform。`main` 是 tag 之後清除 720/P4 與舊 web simulator 的來源整理；v0.1.1 tag 與既有 release assets 保持原樣。
+
 ## Simulator（原始碼）
 
 Git 原始碼只追蹤 simulator 原始碼，不包含編譯後的執行檔。v0.1.1 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) 另提供可選的 macOS arm64 simulator ZIP；適用 macOS 26 以上，ZIP 不含 SDL2，請先用 Homebrew 安裝 `brew install sdl2`。從原始碼建置需 Apple Silicon Mac、Homebrew SDL2、PlatformIO Core 與 Python 3。首次 clone 後先安裝 PlatformIO 套件，再分別建置繁中與英文版：
@@ -169,6 +171,8 @@ make firmware_sim_native480_en
 ./run-zh.sh --demo
 ./run-en.sh --demo
 ```
+
+執行 `make` 會顯示上述建置指令與先決條件。
 
 launcher 預設使用合成資料；demo 不連線 Gateway，也不讀取本機的 `nvs_config.json` 或歷史資料。要用本機設定進入 LIVE，先複製範本並填入自己的 Gateway IP 與密碼：
 

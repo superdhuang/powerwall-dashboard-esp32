@@ -4,8 +4,6 @@
 Default: the native 480 Chinese build (env waveshare-esp32s3-touch-lcd-4b) with
 assets/native480/fonts.pwf -> flash_images/esp32-s3-lcd-4b/current and /zh.
 --lang en builds the separate English app/package at flash_images/.../en.
---legacy packages the old 720->480 scaled build (env
-waveshare-esp32s3-4b-scaled-legacy, assets/fonts.pwf) into .../legacy-scaled.
 """
 import argparse
 import hashlib
@@ -21,24 +19,20 @@ from flash_s3_assets import validate_bundle
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--legacy', action='store_true', help='package the legacy 720->480 scaled build')
     parser.add_argument('--lang', choices=('zh', 'en'), default='zh',
                         help='native480 UI language; zh is the write.sh current bundle')
     args = parser.parse_args()
-    if args.legacy and args.lang != 'zh':
-        parser.error('--lang en is only available for the native 480 build')
     firmware = Path(__file__).resolve().parents[1]
     core = Path(os.environ.get('PLATFORMIO_CORE_DIR', Path.home() / '.platformio'))
     pio = core / 'penv/bin/pio'
     python = core / 'penv/bin/python'
-    target = ('waveshare-esp32s3-4b-scaled-legacy' if args.legacy else
-              'waveshare-esp32s3-touch-lcd-4b' + ('-en' if args.lang == 'en' else ''))
-    fonts = firmware / ('assets/fonts.pwf' if args.legacy else 'assets/native480/fonts.pwf')
+    target = 'waveshare-esp32s3-touch-lcd-4b' + ('-en' if args.lang == 'en' else '')
+    fonts = firmware / 'assets/native480/fonts.pwf'
     subprocess.run([str(pio), 'run', '-d', str(firmware), '-e', target], check=True)
     build = firmware / '.pio/build' / target
     spiffsgen = core / 'packages/framework-espidf/components/spiffs/spiffsgen.py'
     package_root = firmware.parent / 'flash_images/esp32-s3-lcd-4b'
-    destination = package_root / ('legacy-scaled' if args.legacy else ('en' if args.lang == 'en' else 'current'))
+    destination = package_root / ('en' if args.lang == 'en' else 'current')
     destination.parent.mkdir(parents=True, exist_ok=True)
     # Stage and validate everything before replacing the usable bundle.
     with tempfile.TemporaryDirectory(prefix='.s3-package-', dir=destination.parent) as temp:
@@ -75,13 +69,13 @@ def main():
         (images / 'manifest.json').write_text(json.dumps({
             # Board id checked by flash_s3_assets.py; both builds target the same 4B board.
             'target': 'waveshare-esp32s3-touch-lcd-4b', 'pio_env': target,
-            'language': 'zh' if args.legacy else args.lang, 'flash_bytes': 0x1000000,
+            'language': args.lang, 'flash_bytes': 0x1000000,
             'fonts_bytes': (data / 'fonts.pwf').stat().st_size,
             'font_count': int.from_bytes(fonts.read_bytes()[16:20], 'little'), 'images': rows,
         }, indent=2) + '\n')
         validate_bundle(images)
         publish_to = [destination]
-        if not args.legacy and args.lang == 'zh':
+        if args.lang == 'zh':
             publish_to.insert(0, package_root / 'zh')
         for output in publish_to:
             output.mkdir(exist_ok=True)
@@ -91,8 +85,7 @@ def main():
                     shutil.copy2(source, staged / source.name)
                 for source in staged.iterdir():
                     os.replace(source, output / source.name)
-    label = 'legacy-scaled' if args.legacy else args.lang
-    print(f'Validated {label} S3 bundle: {destination}', flush=True)
+    print(f'Validated {args.lang} S3 bundle: {destination}', flush=True)
 
 
 if __name__ == '__main__':

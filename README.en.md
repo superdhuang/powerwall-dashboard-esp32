@@ -142,7 +142,7 @@ Full-flash logs are saved under `log/write-full*.log`. After the erase, the devi
 
 ## Build from source
 
-Install PlatformIO Core and Python 3. To reproduce the v0.1.1 firmware package, check out the release tag and run this from the repository root:
+Install PlatformIO Core and Python 3. To build the v0.1.1 package from its original source, check out the release tag and run this from the repository root:
 
 ```sh
 git checkout v0.1.1
@@ -158,6 +158,8 @@ pio run -d firmware -e waveshare-esp32s3-touch-lcd-4b-en-release
 
 `.gitignore` excludes `flash_images/`; binary release assets are distributed separately from the source repository.
 
+The published v0.1.1 ZIP and its `SHA256SUMS` are the checksum reference for that release. A rebuild is not guaranteed to be byte-for-byte identical because PlatformIO uses the upstream `stable` platform. `main` contains a later source cleanup that removes the 720/P4 targets and old web simulator; the v0.1.1 tag and published release assets remain unchanged.
+
 ## Simulator source
 
 The Git source tracks the simulator code, not compiled binaries. The v0.1.1 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) also offers an optional macOS arm64 simulator ZIP for macOS 26 or later. SDL2 is not bundled; install it locally with Homebrew using `brew install sdl2`. Building from source requires an Apple Silicon Mac, Homebrew SDL2, PlatformIO Core, and Python 3. After a fresh clone, install the PlatformIO package dependencies, then build each language:
@@ -169,6 +171,8 @@ make firmware_sim_native480_en
 ./run-zh.sh --demo
 ./run-en.sh --demo
 ```
+
+Running `make` prints these build commands and prerequisites.
 
 The launchers default to synthetic data. Demo mode makes no Gateway requests and does not read local `nvs_config.json` or history files. For LIVE mode, create a local `nvs_config.json` with your own settings (it is ignored by Git) and run the wrapper with `--live`. The private configuration file is not included in the Git repository.
 

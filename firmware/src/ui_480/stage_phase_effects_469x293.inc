@@ -1,5 +1,4 @@
-// Generated from powerwall dashboard commit 0bb851c3cb005aa68417253200a7975719f97781.
-// Source: firmware/tools/extract_3d_assets_480.py --phase-effects-only --size 469x293
+// Generated native 469x293 phase effects retained as firmware source data.
 const StageMoonPixel kStageMoonPixels[] = {
   {395, 33, {0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3}},
   {397, 33, {0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3, 0x18c3}},

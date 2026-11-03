@@ -10,8 +10,6 @@ nvs_config.json
 # Local simulator/build output
 /build/
 /firmware_sim*
-/lvgl_sim*
-/concept_sim
 /captures/
 *.log
 *.ppm
