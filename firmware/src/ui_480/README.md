@@ -11,7 +11,7 @@ make firmware_sim_native480 firmware_sim_native480_en
 Release build/package:
 
 ```sh
-python3 firmware/tools/package_s3_release.py --release-id v0.1.1
+python3 firmware/tools/package_s3_release.py --release-id v0.1.2
 ```
 
 See the root [繁體中文 README](../../../README.md) or [English README](../../../README.en.md) for setup and update instructions.

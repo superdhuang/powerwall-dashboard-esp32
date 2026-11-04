@@ -12,7 +12,7 @@ usage() {
   cat <<'EOF'
 Usage: ./write-full.sh [--dry-run] [--port PORT] [--confirm-erase]
 
-Writes the pinned v0.1.1 Traditional Chinese full-flash bundle. A real run
+Writes the pinned v0.1.2 Traditional Chinese full-flash bundle. A real run
 requires --confirm-erase or typing the exact phrase ERASE ALL FLASH.
 --dry-run validates the bundle and prints the erase/write plan without opening
 the serial port or requiring confirmation.
@@ -40,7 +40,7 @@ for arg in "$@"; do
       exit 2
       ;;
     --bundle|--bundle=*)
-      printf 'This script is pinned to its v0.1.1 bundle; refusing %s.\n' "$arg" >&2
+      printf 'This script is pinned to its v0.1.2 bundle; refusing %s.\n' "$arg" >&2
       exit 2
       ;;
     --update-only|--update-only=*)
@@ -75,7 +75,7 @@ elif [[ "$confirm_erase" != 1 ]]; then
 fi
 
 flash_args=(python3 "$script_dir/firmware/tools/flash_s3_assets.py" \
-  --full --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.1/zh")
+  --full --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.2/zh")
 if [[ ${#args[@]} -gt 0 ]]; then
   flash_args+=("${args[@]}")
 fi

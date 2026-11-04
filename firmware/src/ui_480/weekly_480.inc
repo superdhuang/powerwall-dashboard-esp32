@@ -100,7 +100,7 @@ void initializeWeeklyPage(lv_obj_t* screen) {
     lv_obj_set_style_radius(row, 0, 0);
     lv_obj_set_style_border_width(row, 0, 0);
     week_dates_[d] = makeDashboardLabel(row, "", 5, 2, 91, native480_fonts::cjk_12(), 0xf1f5f9);
-    week_badges_[d] = makeDashboardLabel(row, "", 97, 3, 28, native480_fonts::cjk_9(), 0x64748b, LV_TEXT_ALIGN_RIGHT);
+    week_badges_[d] = makeDashboardLabel(row, "", 87, 3, 38, native480_fonts::cjk_9(), 0x64748b, LV_TEXT_ALIGN_RIGHT);
     makeDashboardLabel(row, names[0], 5, 27, 53, native480_fonts::dashboard_cjk_9(), colors[0]);
     week_stats_[d][0] = makeDashboardLabel(row, "—", 5, 28, 57, native480_fonts::montserrat_19(), colors[0]);
     week_stat_units_[d][0] = makeDashboardLabel(row, "kW", 5, 29, 0, native480_fonts::cjk_8(), 0xf1f5f9);

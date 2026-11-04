@@ -4,7 +4,7 @@
 
 Powerwall Gateway dashboard firmware for the Waveshare ESP32-S3-Touch-LCD-4B. See the [Waveshare product page](https://www.waveshare.com/esp32-s3-touch-lcd-4b.htm) for the board.
 
-The v0.1.1 release provides Traditional Chinese and English firmware, spoken alerts, local settings, and on-device history. The repository also includes an LVGL simulator and firmware build/package tools.
+The v0.1.2 release provides Traditional Chinese and English firmware, spoken alerts, local settings, and on-device history. The Powerwall page adds a home-use trend, and the Week page keeps the Today badge on one line. The repository also includes an LVGL simulator and firmware build/package tools.
 
 ## Screenshots
 
@@ -48,7 +48,7 @@ These pages were rendered by this project's simulator with synthetic demo data. 
 - Enter your Wi-Fi name and password, the Gateway IP and password, and your time zone. The default is UTC+08:00; whole-hour offsets from UTC−12:00 through UTC+14:00 are supported and stored in NVS.
 - After the device joins Wi-Fi, open Settings → Info and read **Settings URL**. From a phone or computer on the same Wi-Fi, open that address to revisit the settings page.
 
-## v0.1.1 flashing steps
+## v0.1.2 flashing steps
 
 ### 1. Get the `main` scripts and firmware ZIP
 
@@ -66,32 +66,32 @@ git checkout main
 git pull origin main
 ```
 
-Download `powerwall-dashboard-esp32-v0.1.1-firmware.zip` from the [v0.1.1 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) and extract it into the repository root:
+Download `powerwall-dashboard-esp32-v0.1.2-firmware.zip` from the [v0.1.2 GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.2) and extract it into the repository root:
 
 ```sh
-curl -fL 'https://github.com/superdhuang/powerwall-dashboard-esp32/releases/download/v0.1.1/powerwall-dashboard-esp32-v0.1.1-firmware.zip' -o /tmp/powerwall-dashboard-esp32-v0.1.1-firmware.zip
-unzip -o /tmp/powerwall-dashboard-esp32-v0.1.1-firmware.zip -d .
+curl -fL 'https://github.com/superdhuang/powerwall-dashboard-esp32/releases/download/v0.1.2/powerwall-dashboard-esp32-v0.1.2-firmware.zip' -o /tmp/powerwall-dashboard-esp32-v0.1.2-firmware.zip
+unzip -o /tmp/powerwall-dashboard-esp32-v0.1.2-firmware.zip -d .
 ```
 
-The expected directories are `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/zh/` and `en/`. Each contains a `manifest.json`, `app.bin`, `assets.bin`, and the other images. To build the bundle yourself, follow the build instructions below from the `v0.1.1` tag, then switch back to `main` for the flash scripts.
+The expected directories are `flash_images/esp32-s3-lcd-4b/releases/v0.1.2/zh/` and `en/`. Each contains a `manifest.json`, `app.bin`, `assets.bin`, and the other images. To build the bundle yourself, follow the build instructions below from the `v0.1.2` tag, then switch back to `main` for the flash scripts.
 
 ### 2. Check the manifests and SHA-256
 
-Confirm that both manifests identify release v0.1.1, the matching language, and the Waveshare S3 target; then verify every file checksum from the ZIP:
+Confirm that both manifests identify release v0.1.2, the matching language, and the Waveshare S3 target; then verify every file checksum from the ZIP:
 
 ```sh
 python3 - <<'PY'
 import json
 from pathlib import Path
-root = Path('flash_images/esp32-s3-lcd-4b/releases/v0.1.1')
+root = Path('flash_images/esp32-s3-lcd-4b/releases/v0.1.2')
 for lang in ('zh', 'en'):
     manifest = json.loads((root / lang / 'manifest.json').read_text())
-    assert manifest['release_id'] == 'v0.1.1'
+    assert manifest['release_id'] == 'v0.1.2'
     assert manifest['language'] == lang
     assert manifest['target'] == 'waveshare-esp32s3-touch-lcd-4b'
     print(f'{lang}: manifest OK')
 PY
-(cd flash_images/esp32-s3-lcd-4b/releases/v0.1.1 && shasum -a 256 -c SHA256SUMS)
+(cd flash_images/esp32-s3-lcd-4b/releases/v0.1.2 && shasum -a 256 -c SHA256SUMS)
 ```
 
 ### 3. Find the device serial port
@@ -142,14 +142,14 @@ Full-flash logs are saved under `log/write-full*.log`. After the erase, the devi
 
 ## Build from source
 
-Install PlatformIO Core and Python 3. To build the v0.1.1 package from its original source, check out the release tag and run this from the repository root:
+Install PlatformIO Core and Python 3. To build the v0.1.2 package from its original source, check out the release tag and run this from the repository root:
 
 ```sh
-git checkout v0.1.1
-python3 firmware/tools/package_s3_release.py --release-id v0.1.1
+git checkout v0.1.2
+python3 firmware/tools/package_s3_release.py --release-id v0.1.2
 ```
 
-This builds the zh/en release images under `flash_images/esp32-s3-lcd-4b/releases/v0.1.1/{zh,en}` and records the app/assets hashes and source commit in each manifest. To build only the app images, run these from the repository root:
+This builds the zh/en release images under `flash_images/esp32-s3-lcd-4b/releases/v0.1.2/{zh,en}` and records the app/assets hashes and source commit in each manifest. To build only the app images, run these from the repository root:
 
 ```sh
 pio run -d firmware -e waveshare-esp32s3-touch-lcd-4b-release
@@ -158,11 +158,11 @@ pio run -d firmware -e waveshare-esp32s3-touch-lcd-4b-en-release
 
 `.gitignore` excludes `flash_images/`; binary release assets are distributed separately from the source repository.
 
-The published v0.1.1 ZIP and its `SHA256SUMS` are the checksum reference for that release. A rebuild is not guaranteed to be byte-for-byte identical because PlatformIO uses the upstream `stable` platform. `main` contains a later source cleanup that removes the 720/P4 targets and old web simulator; the v0.1.1 tag and published release assets remain unchanged.
+The published v0.1.2 ZIP and its `SHA256SUMS` are the checksum reference for that release. A rebuild is not guaranteed to be byte-for-byte identical because PlatformIO uses the upstream `stable` platform. The existing v0.1.1 tag and release assets remain unchanged.
 
 ## Simulator source
 
-The Git source tracks the simulator code, not compiled binaries. The v0.1.1 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.1) also offers an optional macOS arm64 simulator ZIP for macOS 26 or later. SDL2 is not bundled; install it locally with Homebrew using `brew install sdl2`. Building from source requires an Apple Silicon Mac, Homebrew SDL2, PlatformIO Core, and Python 3. After a fresh clone, install the PlatformIO package dependencies, then build each language:
+The Git source tracks the simulator code, not compiled binaries. The v0.1.2 [GitHub Release](https://github.com/superdhuang/powerwall-dashboard-esp32/releases/tag/v0.1.2) also offers an optional macOS arm64 simulator ZIP for macOS 26 or later. SDL2 is not bundled; install it locally with Homebrew using `brew install sdl2`. Building from source requires an Apple Silicon Mac, Homebrew SDL2, PlatformIO Core, and Python 3. After a fresh clone, install the PlatformIO package dependencies, then build each language:
 
 ```sh
 pio pkg install -d firmware -e waveshare-esp32s3-touch-lcd-4b

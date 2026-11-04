@@ -15,7 +15,7 @@ for arg in "$@"; do
   esac
 done
 # Update app/assets only. Never erase flash or migrate partitions here.
-# Use the tagged v0.1.1 release bundle. The en/zh development packages remain
+# Use the tagged v0.1.2 release bundle. The en/zh development packages remain
 # available under current/ and en/ and are not overwritten by release packaging.
 exec python3 "$script_dir/firmware/tools/flash_s3_assets.py" \
-  --update-only --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.1/zh" "$@"
+  --update-only --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.2/zh" "$@"

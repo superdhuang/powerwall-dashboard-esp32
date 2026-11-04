@@ -14,6 +14,6 @@ for arg in "$@"; do
       ;;
   esac
 done
-# Update only the tagged v0.1.1 English app/assets bundle; keep NVS and history intact.
+# Update only the tagged v0.1.2 English app/assets bundle; keep NVS and history intact.
 exec python3 "$script_dir/firmware/tools/flash_s3_assets.py" \
-  --update-only --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.1/en" "$@"
+  --update-only --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.2/en" "$@"

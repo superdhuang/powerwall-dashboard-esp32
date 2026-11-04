@@ -139,6 +139,10 @@ public:
   static constexpr int kPwChartCursorH = 147;
   static constexpr int kPwChartCardY = 303;
   static constexpr int kPwChartCardH = 171;
+  static constexpr int kPowerwallTrendLoadH = kDashboardChartH / 2;
+  static constexpr int kPowerwallTrendSocH = kDashboardChartH - kPowerwallTrendLoadH;
+  static constexpr int kPowerwallTrendLoadY = kPwChartPlotY;
+  static constexpr int kPowerwallTrendSocY = kPwChartPlotY + kPowerwallTrendLoadH;
 
   void setWifiStartupCardMode(uint8_t mode, const char* ssid = nullptr,
                               const char* setupUrl = nullptr) {
@@ -931,6 +935,15 @@ public:
                         last_configured_ && last_telemetry_.ok &&
                         !last_telemetry_.stale && !last_telemetry_.demo;
       const lv_color_t expectedStatus = lv_color_hex(live ? 0x34d399 : 0xff5252);
+      const bool trendChartsValid =
+        pw_chart_canvas_ && lv_obj_get_x(pw_chart_canvas_) == kPwChartPlotX &&
+        lv_obj_get_y(pw_chart_canvas_) == kPowerwallTrendSocY &&
+        lv_obj_get_width(pw_chart_canvas_) == kChartW &&
+        lv_obj_get_height(pw_chart_canvas_) == kPowerwallTrendSocH &&
+        pw_load_chart_canvas_ && lv_obj_get_x(pw_load_chart_canvas_) == kPwChartPlotX &&
+        lv_obj_get_y(pw_load_chart_canvas_) == kPowerwallTrendLoadY &&
+        lv_obj_get_width(pw_load_chart_canvas_) == kChartW &&
+        lv_obj_get_height(pw_load_chart_canvas_) == kPowerwallTrendLoadH;
       return headerClockDotLayoutIsValid(pw_header_clock_, pw_header_status_dot_,
           native480_i18n::kEnglish ? native480_fonts::montserrat_16() : native480_fonts::cjk_13(), 201) &&
         page_header_ && pw_header_title_ && pw_header_clock_ && pw_header_date_ &&
@@ -948,8 +961,7 @@ public:
         lv_obj_get_style_bg_color(pw_header_status_dot_, 0).full == expectedStatus.full &&
         pw_chart_card_ && (lv_obj_get_x(pw_chart_card_) == 9) && (lv_obj_get_y(pw_chart_card_) == 303) &&
         (lv_obj_get_height(pw_chart_card_) == 171) &&
-        pw_chart_canvas_ && (lv_obj_get_x(pw_chart_canvas_) == 36) &&
-        (lv_obj_get_y(pw_chart_canvas_) == 7) && (lv_obj_get_height(pw_chart_canvas_) == 140) &&
+        trendChartsValid &&
         pw_now_line_ && (lv_obj_get_y(pw_now_line_) == 7) &&
         (lv_obj_get_height(pw_now_line_) == 147) &&
         pw_tou_segments_[0] && (lv_obj_get_y(pw_tou_segments_[0]) == 148) &&
@@ -1615,6 +1627,9 @@ private:
   lv_obj_t* pw_capacity_total_value_ = nullptr;
   lv_obj_t* pw_now_line_ = nullptr;
   lv_obj_t* pw_now_dot_ = nullptr;
+  lv_obj_t* pw_load_chart_canvas_ = nullptr;
+  lv_color_t* pw_load_chart_buf_ = nullptr;
+  lv_obj_t* pw_load_now_dot_ = nullptr;
   lv_obj_t* pw_tou_segments_[4] = {};
   lv_obj_t* pw_time_ticks_[5] = {};
   lv_obj_t* pw_reserve_chart_label_ = nullptr;
@@ -2446,15 +2461,32 @@ private:
     dashboard_chart_buf_ = allocPixelBuf(kChartW * kDashboardChartH);
     if (dashboard_chart_buf_) {
       pw_chart_canvas_ = lv_canvas_create(pw_chart_card_);
-      lv_canvas_set_buffer(pw_chart_canvas_, dashboard_chart_buf_, kChartW, kDashboardChartH, LV_IMG_CF_TRUE_COLOR);
-      lv_obj_set_pos(pw_chart_canvas_, 36, 7);
+      lv_canvas_set_buffer(pw_chart_canvas_, dashboard_chart_buf_, kChartW, kPowerwallTrendSocH, LV_IMG_CF_TRUE_COLOR);
+      lv_obj_set_pos(pw_chart_canvas_, kPwChartPlotX, kPowerwallTrendSocY);
       lv_obj_clear_flag(pw_chart_canvas_, LV_OBJ_FLAG_SCROLLABLE);
     }
-    const char* pwAxis[] = {"100%", "75%", "50%", "25%", "0%"};
-    for (int i = 0; i < 5; ++i) {
-      const int y = 3 + static_cast<int>(roundf(i * (kDashboardChartH - 5) / 4.0f));
-      makeDashboardLabel(pw_chart_card_, pwAxis[i], 0, y, 36, native480_fonts::montserrat_13(), 0x94a3b8, LV_TEXT_ALIGN_RIGHT);
+    pw_load_chart_buf_ = allocPixelBuf(kChartW * kPowerwallTrendLoadH);
+    if (pw_load_chart_buf_) {
+      pw_load_chart_canvas_ = lv_canvas_create(pw_chart_card_);
+      lv_canvas_set_buffer(pw_load_chart_canvas_, pw_load_chart_buf_, kChartW, kPowerwallTrendLoadH, LV_IMG_CF_TRUE_COLOR);
+      lv_obj_set_pos(pw_load_chart_canvas_, kPwChartPlotX, kPowerwallTrendLoadY);
+      lv_obj_clear_flag(pw_load_chart_canvas_, LV_OBJ_FLAG_SCROLLABLE);
     }
+    const lv_font_t* const trendAxisFont = native480_fonts::montserrat_12();
+    const lv_font_t* const trendTitleFont = native480_i18n::kEnglish
+      ? native480_fonts::montserrat_12() : native480_fonts::cjk_12();
+    makeDashboardLabel(pw_chart_card_, "10 kW", 0, 1, 36,
+      trendAxisFont, 0x94a3b8, LV_TEXT_ALIGN_RIGHT);
+    makeDashboardLabel(pw_chart_card_, "5 kW", 0, 32, 36,
+      trendAxisFont, 0x94a3b8, LV_TEXT_ALIGN_RIGHT);
+    makeDashboardLabel(pw_chart_card_, "0 kW", 0, 56, 36, trendAxisFont, 0x94a3b8, LV_TEXT_ALIGN_RIGHT);
+    makeDashboardLabel(pw_chart_card_, "100%", 0, 78, 36, trendAxisFont, 0x94a3b8, LV_TEXT_ALIGN_RIGHT);
+    makeDashboardLabel(pw_chart_card_, "0%", 0, 134, 36, trendAxisFont, 0x94a3b8, LV_TEXT_ALIGN_RIGHT);
+    makeDashboardLabel(pw_chart_card_, native480_i18n::kEnglish ? "Home" : "住家",
+      kPwChartPlotX + 3, kPowerwallTrendLoadY + 2,
+      42, trendTitleFont, 0x38bdf8);
+    makeDashboardLabel(pw_chart_card_, "PW", kPwChartPlotX + 3, kPowerwallTrendSocY + 2,
+      28, trendAxisFont, 0x11e58e);
     static const char* pwFixedTicks[] = {"00", "06", "12", "18", "24"};
     for (int i = 0; i < 5; ++i) {
       constexpr int tickWidth = 40;
@@ -2487,6 +2519,14 @@ private:
     lv_obj_set_style_border_color(pw_now_dot_, lv_color_hex(0xffffff), 0);
     lv_obj_set_style_border_width(pw_now_dot_, 1, 0);
     lv_obj_add_flag(pw_now_dot_, LV_OBJ_FLAG_HIDDEN);
+    pw_load_now_dot_ = lv_obj_create(pw_chart_card_);
+    lv_obj_set_size(pw_load_now_dot_, 7, 7);
+    lv_obj_set_style_radius(pw_load_now_dot_, 3, 0);
+    lv_obj_set_style_bg_color(pw_load_now_dot_, lv_color_hex(0x38bdf8), 0);
+    lv_obj_set_style_bg_opa(pw_load_now_dot_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_color(pw_load_now_dot_, lv_color_hex(0xffffff), 0);
+    lv_obj_set_style_border_width(pw_load_now_dot_, 1, 0);
+    lv_obj_add_flag(pw_load_now_dot_, LV_OBJ_FLAG_HIDDEN);
     pw_reserve_chart_label_ = makeDashboardLabel(pw_chart_card_, "", 0, 0, 0, native480_fonts::home_cjk_20(), 0x7dd3fc, LV_TEXT_ALIGN_RIGHT);
     lv_obj_set_width(pw_reserve_chart_label_, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(pw_reserve_chart_label_, lv_color_make(9, 10, 15), 0);
@@ -2982,6 +3022,61 @@ private:
     }
   }
 
+  static uint32_t powerwallTrendLoadColor(HistoryPowerSource source) {
+    if (source == HistoryPowerSource::Grid) return 0x38bdf8;
+    if (source == HistoryPowerSource::Powerwall) return 0x11e58e;
+    return 0x94a3b8;
+  }
+
+  // Match the Week page's source-colored load trace, using the same gap
+  // threshold to avoid connecting missing history.
+  static void renderPowerwallTrendLoadToRgb565(lv_color_t* buffer, int width, int height,
+                                                const HistoryPoint* points, size_t count,
+                                                float maxKw) {
+    if (!buffer || width <= 0 || height <= 0) return;
+    const lv_color_t bg = lv_color_hex(0x090e13);
+    for (int i = 0; i < width * height; ++i) buffer[i] = bg;
+    for (const int y : {1, height / 2, height - 2})
+      for (int x = 0; x < width; ++x)
+        blendDashboardPixel(buffer, width, height, x, y, 148, 163, 184, 0.16f);
+    for (int division = 1; division <= 3; ++division) {
+      const int x = static_cast<int>(roundf(division * (width - 1) / 4.0f));
+      for (int y = 1; y < height - 1; ++y)
+        blendDashboardPixel(buffer, width, height, x, y, 148, 163, 184, 0.10f);
+    }
+    if (!points || count == 0) return;
+
+    auto pointX = [width](float hour) {
+      return std::max(0, std::min(width - 1,
+        static_cast<int>(roundf((hour / 24.0f) * (width - 1)))));
+    };
+    auto pointY = [height, maxKw](float kw) {
+      const float normalized = fminf(1.0f, fmaxf(0.0f, kw / maxKw));
+      return std::max(1, std::min(height - 2,
+        height - 2 - static_cast<int>(roundf(normalized * (height - 3)))));
+    };
+    for (size_t i = 0; i < count; ++i) {
+      const HistoryPoint& point = points[i];
+      if (!std::isfinite(point.hour) || !std::isfinite(point.load_kw)) continue;
+      const int x = pointX(point.hour);
+      const int y = pointY(point.load_kw);
+      const uint32_t color = powerwallTrendLoadColor(point.power_source);
+      if (i > 0) {
+        const HistoryPoint& previous = points[i - 1];
+        if (std::isfinite(previous.hour) && std::isfinite(previous.load_kw) &&
+            point.hour >= previous.hour && point.hour - previous.hour <= 0.17f) {
+          drawDashboardLine(buffer, width, height,
+            pointX(previous.hour), pointY(previous.load_kw), x, y,
+            static_cast<uint8_t>(color >> 16), static_cast<uint8_t>(color >> 8),
+            static_cast<uint8_t>(color));
+        }
+      }
+      putDashboardPixel(buffer, width, height, x, y,
+        static_cast<uint8_t>(color >> 16), static_cast<uint8_t>(color >> 8),
+        static_cast<uint8_t>(color));
+    }
+  }
+
   // Draws the Powerwall gauge at an intro progress of 0..1. Arc, percent text,
   // and reserve marker share one progress value, so the marker and the arc
   // arrive at their targets (configured backup reserve / current SOC) together.
@@ -3105,12 +3200,14 @@ private:
     snprintf(text, sizeof(text), "備援 %d%%", static_cast<int>(roundf(t.backup_reserve_percent)));
     setLabelText480(pw_reserve_chart_label_, text);
     const float reservePct = fminf(100.0f, fmaxf(0.0f, t.backup_reserve_percent));
-    const int reserveY = static_cast<int>(roundf((1.0f - reservePct / 100.0f) * (kDashboardChartH - 4))) + 2;
+    constexpr int reservePlotY = kPowerwallTrendSocY;
+    constexpr int reservePlotH = kPowerwallTrendSocH;
+    const int reserveY = static_cast<int>(roundf((1.0f - reservePct / 100.0f) * (reservePlotH - 4))) + 2;
     lv_obj_update_layout(pw_reserve_chart_label_);
     const int reserveLabelH = lv_obj_get_height(pw_reserve_chart_label_);
     const int reserveLabelW = lv_obj_get_width(pw_reserve_chart_label_);
     lv_obj_set_pos(pw_reserve_chart_label_, kPwChartPlotX + kChartW - reserveLabelW - 3,
-                   kPwChartPlotY + std::max(2, reserveY - reserveLabelH - 3));
+                   reservePlotY + std::max(2, reserveY - reserveLabelH - 3));
 
     if (t.has_battery_voltage && t.battery_voltage_v > 0.0f) {
       snprintf(text, sizeof(text), "%.1f V", t.battery_voltage_v);
@@ -3198,23 +3295,38 @@ private:
     }
 
     if (dashboard_chart_buf_ && active_dashboard_page_ == 1) {
-      renderAreaChartToRgb565(dashboard_chart_buf_, kChartW, kDashboardChartH,
+      constexpr float maxKw = 10.0f;
+      if (pw_load_chart_buf_ && pw_load_chart_canvas_) {
+        renderPowerwallTrendLoadToRgb565(pw_load_chart_buf_, kChartW, kPowerwallTrendLoadH,
+          t.history, t.history_count, maxKw);
+        lv_obj_invalidate(pw_load_chart_canvas_);
+      }
+      renderAreaChartToRgb565(dashboard_chart_buf_, kChartW, kPowerwallTrendSocH,
         t.history, t.history_count, true, 100.0f, 17, 229, 142,
         t.backup_reserve_percent, false, 1.0f);
-      for (int division = 1; division <= 3; ++division) {
-        const int y = static_cast<int>(roundf((division / 4.0f) * (kDashboardChartH - 1)));
-        for (int x = 0; x < kChartW; ++x) {
-          blendDashboardPixel(dashboard_chart_buf_, kChartW, kDashboardChartH, x, y, 148, 163, 184, 0.12f);
-        }
-      }
+      for (int x = 0; x < kChartW; ++x)
+        blendDashboardPixel(dashboard_chart_buf_, kChartW, kPowerwallTrendSocH,
+          x, 1, 148, 163, 184, 0.12f);
       if (t.history_count > 0) {
         const HistoryPoint& latest = t.history[t.history_count - 1];
-        const int x = std::max(0, std::min(kChartW - 1, static_cast<int>(roundf((latest.hour / 24.0f) * (kChartW - 1)))));
-        const int y = std::max(2, std::min(kDashboardChartH - 2,
-          static_cast<int>(roundf((1.0f - fminf(1.0f, fmaxf(0.0f, latest.soe / 100.0f))) * (kDashboardChartH - 5))) + 2));
-        lv_obj_set_pos(pw_now_dot_, kPwChartPlotX + x - 3, kPwChartPlotY + y - 3);
+        const int x = std::max(0, std::min(kChartW - 1,
+          static_cast<int>(roundf((latest.hour / 24.0f) * (kChartW - 1)))));
+        const float loadNorm = fminf(1.0f, fmaxf(0.0f, latest.load_kw / maxKw));
+        const int loadY = std::max(1, std::min(kPowerwallTrendLoadH - 2,
+          kPowerwallTrendLoadH - 2 - static_cast<int>(roundf(loadNorm * (kPowerwallTrendLoadH - 3)))));
+        const float soeNorm = fminf(1.0f, fmaxf(0.0f, latest.soe / 100.0f));
+        const int soeY = std::max(2, std::min(kPowerwallTrendSocH - 1,
+          static_cast<int>(roundf((1.0f - soeNorm) * (kPowerwallTrendSocH - 3)) + 2)));
+        lv_obj_set_style_bg_color(pw_load_now_dot_,
+          lv_color_hex(powerwallTrendLoadColor(latest.power_source)), 0);
+        lv_obj_set_pos(pw_load_now_dot_, kPwChartPlotX + x - 3,
+          kPowerwallTrendLoadY + loadY - 3);
+        lv_obj_set_pos(pw_now_dot_, kPwChartPlotX + x - 3,
+          kPowerwallTrendSocY + soeY - 3);
+        lv_obj_clear_flag(pw_load_now_dot_, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(pw_now_dot_, LV_OBJ_FLAG_HIDDEN);
       } else {
+        lv_obj_add_flag(pw_load_now_dot_, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(pw_now_dot_, LV_OBJ_FLAG_HIDDEN);
       }
       lv_obj_invalidate(pw_chart_canvas_);
@@ -3509,6 +3621,7 @@ private:
     if (home_now_dot_) lv_obj_set_style_opa(home_now_dot_,
       (now_ms / 500UL) % 2 == 0 ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
     const lv_opa_t pointOpa = (now_ms / 500UL) % 2 == 0 ? LV_OPA_COVER : LV_OPA_TRANSP;
+    if (pw_load_now_dot_) lv_obj_set_style_opa(pw_load_now_dot_, pointOpa, 0);
     if (chart1_now_dot_) lv_obj_set_style_opa(chart1_now_dot_, pointOpa, 0);
     if (chart2_now_dot_) lv_obj_set_style_opa(chart2_now_dot_, pointOpa, 0);
     if (now_ms - last_periodic_check_ms_ < 1000UL) return;

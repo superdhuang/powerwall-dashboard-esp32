@@ -14,6 +14,6 @@ for arg in "$@"; do
       ;;
   esac
 done
-# Pin the Traditional Chinese writer to the tagged v0.1.1 release bundle.
+# Pin the Traditional Chinese writer to the tagged v0.1.2 release bundle.
 exec python3 "$script_dir/firmware/tools/flash_s3_assets.py" \
-  --update-only --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.1/zh" "$@"
+  --update-only --bundle "$script_dir/flash_images/esp32-s3-lcd-4b/releases/v0.1.2/zh" "$@"
